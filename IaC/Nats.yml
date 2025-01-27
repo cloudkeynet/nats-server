@@ -2,6 +2,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Deploy a NATS.io server on Amazon ECS
 
 Parameters:
+  ##Is the ARN of the SNS for the notifications##
     SNSTopicARN:
       Type: String
       Description: "ARN of the SNS topic for notifications"
