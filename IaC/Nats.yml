@@ -15,6 +15,7 @@ Parameters:
        c5.large, c5.xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge, c5.18xlarge,
        r5.large, r5.xlarge, r5.2xlarge, r5.4xlarge, r5.12xlarge, r5.24xlarge  ]
      ConstraintDescription: Please choose a valid instance type.
+  ##The maximun number of instances that can be launched un the cluster##
     MaxSize:
      Type: Number
      Default: '1'
@@ -23,21 +24,26 @@ Parameters:
      Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
      Default: /aws/service/ecs/optimized-ami/amazon-linux-2/recommended/image_id
      Description: The Amazon Machine Image ID used for the cluster, leave it as the default value to get the latest AMI
+  ##Is the number of EC2 instances that can be launched un the cluster##
     DesiredCapacity:
      Type: Number
      Default: '1'
      Description: Number of EC2 instances to launch in your ECS cluster.
+  ##The image tag for the AI service##
     ImageTag:
      Type: String
      Description: ECR image tag for the AI service.
      AllowedPattern: .+
+  ##The ARN to identify the certificate in AWS Certificate Manager for the HTTPS##
     CertificateArn:
      Type: String
      Description: "The ARN of the SSL certificate from AWS Certificate Manager (ACM) for HTTPS"
+  ##Set the number of the of task that are neccesary to keep runnging on the cluster##
     ECSTaskDesiredCount:
      Default: 0
      Type: Number
      ConstraintDescription: Set the number of instantiations of the specified task definition to place and keep running on your cluster for the NATS service.
+  ##Is the ID of the VPC##
     VPCID:
      Type: AWS::EC2::VPC::Id
      Description: Id of the VPC.
@@ -52,13 +58,15 @@ Parameters:
      Description: "The subnets in which the ALB will be deployed (must be in multiple Availability Zones for high availability)"
 
 Resources:
+  ##This resource deploy the ECS cluster##
     ECSCluster:
-      Type: AWS::ECS::Cluster
+      Type: AWS::ECS::Cluster 
       Properties:
         ClusterName: NATS
         Tags:
         - Key: Name
           Value: !Sub NATS-${EnvironmentName}
+  ##SecurityGroup of the instances of ECS limited to the route 10.0.0.0/8##
     SecurityGroup:
       Type: AWS::EC2::SecurityGroup
       Properties:
@@ -77,6 +85,7 @@ Resources:
         Tags:
         - Key: Name
           Value: !Sub LINC-${EnvironmentName}
+  ##Is the element that have the responsible for distribute the traffic of the network and the load of work in the server in a private way##
     PrivateLoadBalancer:
       Type: AWS::ElasticLoadBalancingV2::LoadBalancer
       Properties:
@@ -88,6 +97,7 @@ Resources:
         Tags:
           - Key: Owner
             Value: !Sub ${EnvironmentName}
+  ##This is a alert that have the function to send a messahe when the count exceeds the threshold for the target group (Nats-4222)"##
     UnhealthyHostCountAlarmNat4222:
       Type: AWS::CloudWatch::Alarm
       Properties:
@@ -109,6 +119,7 @@ Resources:
           - !Ref SNSTopicARN
         OKActions:
           - !Ref SNSTopicARN
+  ##This is a alert that have the function to send a messahe when the count exceeds the threshold for the target group (Nats-6222)"##
     UnhealthyHostCountAlarmNat6222:
       Type: AWS::CloudWatch::Alarm
       Properties:
@@ -130,6 +141,7 @@ Resources:
           - !Ref SNSTopicARN
         OKActions:
           - !Ref SNSTopicARN
+  ##This is a alert that have the function to send a messahe when the count exceeds the threshold for the target group (Nats-8222)"##
     UnhealthyHostCountAlarmNat8222:
       Type: AWS::CloudWatch::Alarm
       Properties:
@@ -151,6 +163,7 @@ Resources:
           - !Ref SNSTopicARN
         OKActions:
           - !Ref SNSTopicARN
+  ##Is the group of log streams that monitoring the acces control settings##
     LogGroup:
         Type: AWS::Logs::LogGroup
         Properties:
@@ -162,6 +175,7 @@ Resources:
               - Ref: EnvironmentName
               - ECS-task-
               - nats
+  ##Is the element that have the responsible for distribute the traffic of the network and the load of work in the server in a private way in the security group##
     PrivateLoadBalancerSG:
         Type: AWS::EC2::SecurityGroup
         Properties:
@@ -189,6 +203,7 @@ Resources:
           Tags:
             - Key: Owner
               Value: !Sub ${EnvironmentName}
+  ##This is the AIM role that have the task when are executed##
     TaskExecutionRole:
      Type: "AWS::IAM::Role"
      Properties:
@@ -277,6 +292,7 @@ Resources:
                    - "ecr:BatchGetImage"
                  Resource: "*"
        RoleName: !Sub 'EcsTasksExecutionRole-${EnvironmentName}-nats'
+  ##This is the definition that are given for the different task like a microservices##
     MicroserviceTaskDefinition:
       Type: AWS::ECS::TaskDefinition
       DependsOn:
@@ -328,6 +344,7 @@ Resources:
         Tags:
                 - Key: Owner
                   Value: !Sub ${EnvironmentName}
+  ##This is the route request to individual registered targets, such EC2 instances using the protocol and port number (6222) that are specify.##
     TargetGroupNATS6222:
       Type: AWS::ElasticLoadBalancingV2::TargetGroup
       Properties:
@@ -346,6 +363,7 @@ Resources:
         TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: "30"
+  ##This is the route request to individual registered targets, such EC2 instances using the protocol and port number (4222) that are specify.##
     TargetGroupNATS4222:
       Type: AWS::ElasticLoadBalancingV2::TargetGroup
       Properties:
@@ -364,6 +382,7 @@ Resources:
         TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: "30"
+  ##This is the route request to individual registered targets, such EC2 instances using the protocol and port number (8222) that are specify.##
     TargetGroupNATS8222:
       Type: AWS::ElasticLoadBalancingV2::TargetGroup
       Properties:
@@ -382,6 +401,7 @@ Resources:
         TargetGroupAttributes:
         - Key: deregistration_delay.timeout_seconds
           Value: "30"
+  ##Is the process that checks for connection requests, using the protocol and the port in this case 6222##
     ALBListener6222:
       Type: "AWS::ElasticLoadBalancingV2::Listener"
       Properties:
@@ -391,6 +411,7 @@ Resources:
         LoadBalancerArn: !Ref PrivateLoadBalancer
         Port: 6222
         Protocol: TCP
+  ##Is the process that checks for connection requests, using the protocol and the port##
     ALBListener:
       Type: "AWS::ElasticLoadBalancingV2::Listener"
       Properties:
@@ -400,6 +421,7 @@ Resources:
         LoadBalancerArn: !Ref PrivateLoadBalancer
         Port: 4222
         Protocol: TCP
+  ##Is the process that checks for connection requests, using the protocol and the port in this case 8222##
     ALBListener8222:
       Type: "AWS::ElasticLoadBalancingV2::Listener"
       Properties:
@@ -409,6 +431,7 @@ Resources:
         LoadBalancerArn: !Ref PrivateLoadBalancer
         Port: 8222
         Protocol: TCP
+  ##This is the IAM role that is used for the ECS elements
     IAMRoleECS:
         Type: "AWS::IAM::Role"
         Properties:
@@ -421,6 +444,7 @@ Resources:
             Tags:
               - Key: Owner
                 Value: !Sub ${EnvironmentName}
+  ##Is the repository that managed container image registry service that is secure, scalable and reliable##
     ECRRepository:
       Type: AWS::ECR::Repository
       Properties:
@@ -435,6 +459,7 @@ Resources:
         - Key: Owner
           Value:
             Fn::Sub: ${EnvironmentName}
+  ##The group that managed the scaling of Amazon EC2 instances that are registered in the cluster##
     ECSAutoScalingGroup:
       Type: AWS::AutoScaling::AutoScalingGroup
       Properties:
@@ -450,6 +475,7 @@ Resources:
       UpdatePolicy:
         AutoScalingReplacingUpdate:
           WillReplace: 'true'
+  ##That are the instances of the container that are running in the cluster in the scaling##
     ContainerInstances:
         Type: AWS::AutoScaling::LaunchConfiguration
         Properties:
@@ -475,6 +501,7 @@ Resources:
               echo ECS_ENABLE_CONTAINER_INSTANCE_DRAINING=true >> /etc/ecs/ecs.config
               yum install -y aws-cfn-bootstrap
               /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource ECSAutoScalingGroup --region ${AWS::Region}
+  ##Is the instance of the EC2 profile in IAM## 
     EC2InstanceProfile:
         Type: AWS::IAM::InstanceProfile
         Properties:
@@ -547,6 +574,7 @@ Resources:
          Tags:
            - Key: Name
              Value: !Sub LINC-${EnvironmentName}
+  ##The role used for ECS in IAM##
     ECSRole:
         Type: AWS::IAM::Role
         Properties:
@@ -585,6 +613,7 @@ Resources:
           Tags:
             - Key: Name
               Value: !Sub LINC-${EnvironmentName}
+  ##The fully managed container orchestration service that helps for a easily deploy, manage, and scale containerized applications.
     ECSServiceNATS:
       Type: AWS::ECS::Service
       DependsOn:
@@ -647,6 +676,7 @@ Resources:
         Tags:
           - Key: Owner
             Value: !Sub ${EnvironmentName}
+  ##Is the alarm created by CloudWatch that are activated when the ECS services used more that 80% of CPU for NATS##
     CPUAlarm:
        Type: AWS::CloudWatch::Alarm
        Properties:
@@ -664,6 +694,7 @@ Resources:
              Value: !Ref ECSCluster
          AlarmActions:
            - !Ref SNSTopicARN
+  ##This is the alarm that is activated when the ECS services used more that 80% of memory for the Nats##
     MemoryAlarm:
        Type: AWS::CloudWatch::Alarm
        Properties:
