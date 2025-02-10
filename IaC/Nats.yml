@@ -219,21 +219,6 @@ Resources:
              Action:
                - "sts:AssumeRole"
        Policies:
-         - PolicyName: "KMSReadOnlyPolicy"
-           PolicyDocument:
-             Version: "2012-10-17"
-             Statement:
-               - Effect: "Allow"
-                 Action:
-                   - "kms:DescribeKey"
-                   - "kms:ListKeys"
-                   - "kms:ListAliases"
-                   - "kms:ListKeyPolicies"
-                   - "kms:GetKeyPolicy"
-                   - "kms:ListGrants"
-                   - "kms:ListResourceTags"
-                   - "kms:ListRetirableGrants"
-                 Resource: "*"
          - PolicyName: "SSMReadOnlyPolicy"
            PolicyDocument:
              Version: "2012-10-17"
@@ -246,18 +231,6 @@ Resources:
                    - "ssm:DescribeParameters"
                    - "ssm:GetParameterHistory"
                    - "ssm:ListTagsForResource"
-                 Resource: "*"
-         - PolicyName: "SecretsManagerReadOnlyPolicy"
-           PolicyDocument:
-             Version: "2012-10-17"
-             Statement:
-               - Effect: "Allow"
-                 Action:
-                   - "secretsmanager:GetSecretValue"
-                   - "secretsmanager:DescribeSecret"
-                   - "secretsmanager:ListSecrets"
-                   - "secretsmanager:ListSecretVersionIds"
-                   - "secretsmanager:GetResourcePolicy"
                  Resource: "*"
          - PolicyName: "CloudWatchLogsReadWritePolicy"
            PolicyDocument:
@@ -567,9 +540,6 @@ Resources:
                  - 'ecr:GetAuthorizationToken'
                  - 'ecr:BatchGetImage'
                  - 'ecr:GetDownloadUrlForLayer'
-                 - "ssm:*"
-                 - "ssmmessages:*"
-                 - "ec2messages:*"
                Resource: '*'
          Tags:
            - Key: Name
