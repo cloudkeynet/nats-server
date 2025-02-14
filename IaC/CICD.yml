@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ""
+Resources:
+    CodeBuildProject:
+        Type: "AWS::CodeBuild::Project"
+        DependsOn: "IAMRole2"
+        Properties:
+            Name: "NATS"
+            Source: 
+                BuildSpec: !Sub |
+                    version: 0.2
+                    phases:
+                      install:
+                        commands:
+                          - echo Logging in to Amazon ECR...
+                          - aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
+                      pre_build:
+                        commands:
+                           - echo "Passing environment variables and building the Docker image..."
+                          # Loop through env.list and pass each variable explicitly to docker build
+                           - docker build --no-cache -f docker/Dockerfile.nightly -t dev-nats:latest .
+                      build:
+                        commands:
+                          - echo Tagging the Docker image...
+                          - docker tag dev-nats:latest ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/dev-nats:latest
+                      post_build:
+                        commands:
+                          - echo Pushing the Docker image to ECR...
+                          - docker push ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/dev-nats:latest
+                          - echo Build completed on `date`
+                          - echo "Creating imagedefinitions.json for ECS deployment"
+                          - printf '[{"name":"dev-nats","imageUri":"%s:%s"}]' ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/dev-nats latest > imagedefinitions.json
+                          - echo "Starting deployment using CodeDeploy"
+                InsecureSsl: false
+                Type: "CODEPIPELINE"
+            Artifacts: 
+                EncryptionDisabled: false
+                Name: "NATS"
+                Packaging: "NONE"
+                Type: "CODEPIPELINE"
+            Cache: 
+                Type: "NO_CACHE"
+            Environment: 
+                ComputeType: "BUILD_GENERAL1_SMALL"
+                EnvironmentVariables: 
+                  - 
+                    Name: "CommitId"
+                    Type: "PLAINTEXT"
+                    Value: "lastest"
+                Image: "aws/codebuild/standard:7.0"
+                ImagePullCredentialsType: "CODEBUILD"
+                PrivilegedMode: true
+                Type: "LINUX_CONTAINER"
+            ServiceRole: !GetAtt IAMRole2.Arn
+            TimeoutInMinutes: 60
+            QueuedTimeoutInMinutes: 480
+            VpcConfig: {}
+            BadgeEnabled: false
+            LogsConfig: 
+                CloudWatchLogs: 
+                    Status: "ENABLED"
+                S3Logs: 
+                    Status: "DISABLED"
+                    EncryptionDisabled: false
+            Visibility: "PRIVATE"
+    IAMRole2:
+        Type: "AWS::IAM::Role"
+        Properties:
+            Path: "/service-role/"
+            RoleName: "codebuild-nats-service-role"
+            AssumeRolePolicyDocument: "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"codebuild.amazonaws.com\"},\"Action\":\"sts:AssumeRole\"}]}"
+            MaxSessionDuration: 3600
+            ManagedPolicyArns: 
+              - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess"
+              - "arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess"
+              - "arn:aws:iam::aws:policy/CloudWatchFullAccess"
+              - "arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess"
+              - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+
+
