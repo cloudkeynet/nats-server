@@ -424,7 +424,7 @@ Resources:
         RepositoryName: !Join [ "-", [{Ref: EnvironmentName}, 'nats' ] ]
         EncryptionConfiguration:
           EncryptionType: KMS
-          KmsKey: !Sub "arn:aws:kms:us-east-1:533266983918:key/d25b00b1-0a6b-4349-b7ea-e7cb56f09244"
+          KmsKey: !Sub "arn:aws:kms:us-east-1:${AWS::AccountId}:alias/my-kms-key"
         LifecyclePolicy:
           LifecyclePolicyText: "{\n  \"rules\": [\n    {\n      \"rulePriority\": 1,\n\
             \      \"description\": \"Only keep 5 images\",\n      \"selection\": {\n\
