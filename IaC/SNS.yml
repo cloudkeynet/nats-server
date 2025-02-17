@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Deploy an SNS Topic and a subscription"
+
+Resources:
+  MySnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: MyNatsTopic
+
+  MySnsSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      Endpoint: jerson.l@cloudkeynet.com
+      TopicArn: !Ref MySnsTopic
