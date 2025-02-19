@@ -3,9 +3,9 @@ Description: Deploy a NATS.io server on Amazon ECS
 
 Parameters:
   ##Is the ARN of the SNS for the notifications##
-    SNSTopicARN:
+    EmailNotification:
       Type: String
-      Description: "ARN of the SNS topic for notifications"
+      Description: "email for notigfication SNS"
     InstanceType:
      Type: String
      Default: t3a.medium
@@ -58,6 +58,16 @@ Parameters:
      Description: "The subnets in which the ALB will be deployed (must be in multiple Availability Zones for high availability)"
 
 Resources:
+    MySnsTopic:
+     Type: AWS::SNS::Topic
+     Properties:
+       TopicName: MyNatsTopic
+    MySnsSubscription:
+     Type: AWS::SNS::Subscription
+     Properties:
+       Protocol: email
+       Endpoint: !Ref EmailNotification
+       TopicArn: !Ref MySnsTopic
   ##This resource deploy the ECS cluster##
     ECSCluster:
       Type: AWS::ECS::Cluster 
@@ -116,9 +126,9 @@ Resources:
         Threshold: 1
         ComparisonOperator: GreaterThanThreshold
         AlarmActions:
-          - !Ref SNSTopicARN
+          - !Ref MySnsTopic
         OKActions:
-          - !Ref SNSTopicARN
+          - !Ref MySnsTopic
   ##This is a alert that have the function to send a messahe when the count exceeds the threshold for the target group (Nats-6222)"##
     UnhealthyHostCountAlarmNat6222:
       Type: AWS::CloudWatch::Alarm
@@ -138,9 +148,9 @@ Resources:
         Threshold: 1
         ComparisonOperator: GreaterThanThreshold
         AlarmActions:
-          - !Ref SNSTopicARN
+          - !Ref MySnsTopic
         OKActions:
-          - !Ref SNSTopicARN
+          - !Ref MySnsTopic
   ##This is a alert that have the function to send a messahe when the count exceeds the threshold for the target group (Nats-8222)"##
     UnhealthyHostCountAlarmNat8222:
       Type: AWS::CloudWatch::Alarm
@@ -160,9 +170,9 @@ Resources:
         Threshold: 1
         ComparisonOperator: GreaterThanThreshold
         AlarmActions:
-          - !Ref SNSTopicARN
+          - !Ref MySnsTopic
         OKActions:
-          - !Ref SNSTopicARN
+          - !Ref MySnsTopic
   ##Is the group of log streams that monitoring the acces control settings##
     LogGroup:
         Type: AWS::Logs::LogGroup
@@ -666,7 +676,7 @@ Resources:
            - Name: ClusterName
              Value: !Ref ECSCluster
          AlarmActions:
-           - !Ref SNSTopicARN
+           - !Ref MySnsTopic
   ##This is the alarm that is activated when the ECS services used more that 80% of memory for the Nats##
     MemoryAlarm:
        Type: AWS::CloudWatch::Alarm
@@ -684,4 +694,4 @@ Resources:
            - Name: ClusterName
              Value: !Ref ECSCluster
          AlarmActions:
-           - !Ref SNSTopicARN
+           - !Ref MySnsTopic
