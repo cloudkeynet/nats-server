@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Plantilla para desplegar un SNS Topic y una suscripción"
+
+Resources:
+  MySnsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: MyNatsTopic
+
+  MySnsSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Protocol: email
+      Endpoint: ejemplo@dominio.com  # Cambia este correo por el deseado
+      TopicArn: !Ref MySnsTopic
