@@ -99,8 +99,8 @@ Resources:
     PrivateLoadBalancer:
       Type: AWS::ElasticLoadBalancingV2::LoadBalancer
       Properties:
-        Name: !Sub ${EnvironmentName}-LoadBalancer-nats
-        Scheme: internal
+        Name: !Sub ${EnvironmentName}-LoadBalancer-nats-Public
+        Scheme: internet-facing
         Type: network
         Subnets: !Ref Subnets
         SecurityGroups: [!Ref 'PrivateLoadBalancerSG']
@@ -477,6 +477,22 @@ Resources:
         Tags:
           - Key: Owner
             Value: !Ref EnvironmentName
+  ##This
+    ECSAutoScalingGroup:
+      Type: AWS::AutoScaling::AutoScalingGroup
+      Properties:
+        VPCZoneIdentifier: !Ref Subnets
+        LaunchConfigurationName: !Ref 'ContainerInstances'
+        MinSize: '1'
+        MaxSize: !Ref 'MaxSize'
+        DesiredCapacity: !Ref 'DesiredCapacity'
+        Tags:
+        - Key: Name
+          Value: !Sub NATS-${EnvironmentName}
+          PropagateAtLaunch: true
+      UpdatePolicy:
+        AutoScalingReplacingUpdate:
+          WillReplace: 'true'
   ##That are the instances of the container that are running in the cluster in the scaling##
     ContainerInstances:
         Type: AWS::AutoScaling::LaunchConfiguration
