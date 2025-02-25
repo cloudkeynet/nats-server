@@ -96,14 +96,14 @@ Resources:
         - Key: Name
           Value: !Sub LINC-${EnvironmentName}
   ##Is the element that have the responsible for distribute the traffic of the network and the load of work in the server in a private way##
-    PrivateLoadBalancer:
+    PublicLoadBalancer:
       Type: AWS::ElasticLoadBalancingV2::LoadBalancer
       Properties:
         Name: !Sub ${EnvironmentName}-LoadBalancer-nats-Public
         Scheme: internet-facing
         Type: network
         Subnets: !Ref Subnets
-        SecurityGroups: [!Ref 'PrivateLoadBalancerSG']
+        SecurityGroups: [!Ref 'PublicLoadBalancerSG']
         Tags:
           - Key: Owner
             Value: !Sub ${EnvironmentName}
@@ -117,7 +117,7 @@ Resources:
         MetricName: "UnHealthyHostCount"
         Dimensions:
           - Name: LoadBalancer
-            Value: !GetAtt PrivateLoadBalancer.LoadBalancerFullName
+            Value: !GetAtt PublicLoadBalancer.LoadBalancerFullName
           - Name: TargetGroup
             Value: !GetAtt TargetGroupNATS4222.TargetGroupFullName
         Statistic: Sum
@@ -139,7 +139,7 @@ Resources:
         MetricName: "UnHealthyHostCount"
         Dimensions:
           - Name: LoadBalancer
-            Value: !GetAtt PrivateLoadBalancer.LoadBalancerFullName
+            Value: !GetAtt PublicLoadBalancer.LoadBalancerFullName
           - Name: TargetGroup
             Value: !GetAtt TargetGroupNATS6222.TargetGroupFullName
         Statistic: Sum
@@ -161,7 +161,7 @@ Resources:
         MetricName: "UnHealthyHostCount"
         Dimensions:
           - Name: LoadBalancer
-            Value: !GetAtt PrivateLoadBalancer.LoadBalancerFullName # Replace with ALB name and ID
+            Value: !GetAtt PublicLoadBalancer.LoadBalancerFullName # Replace with ALB name and ID
           - Name: TargetGroup
             Value: !GetAtt TargetGroupNATS8222.TargetGroupFullName # Replace with TG1 name and ID
         Statistic: Sum
@@ -186,7 +186,7 @@ Resources:
               - ECS-task-
               - nats
   ##Is the element that have the responsible for distribute the traffic of the network and the load of work in the server in a private way in the security group##
-    PrivateLoadBalancerSG:
+    PublicLoadBalancerSG:
         Type: AWS::EC2::SecurityGroup
         Properties:
           GroupName: !Sub ${EnvironmentName}-LoadBalancerSG-nats
@@ -391,7 +391,7 @@ Resources:
         DefaultActions:
           - Type: forward
             TargetGroupArn: !Ref TargetGroupNATS6222
-        LoadBalancerArn: !Ref PrivateLoadBalancer
+        LoadBalancerArn: !Ref PublicLoadBalancer
         Port: 6222
         Protocol: TCP
   ##Is the process that checks for connection requests, using the protocol and the port##
@@ -401,7 +401,7 @@ Resources:
         DefaultActions:
           - Type: forward
             TargetGroupArn: !Ref TargetGroupNATS4222
-        LoadBalancerArn: !Ref PrivateLoadBalancer
+        LoadBalancerArn: !Ref PublicLoadBalancer
         Port: 4222
         Protocol: TCP
   ##Is the process that checks for connection requests, using the protocol and the port in this case 8222##
@@ -411,7 +411,7 @@ Resources:
         DefaultActions:
           - Type: forward
             TargetGroupArn: !Ref TargetGroupNATS8222
-        LoadBalancerArn: !Ref PrivateLoadBalancer
+        LoadBalancerArn: !Ref PublicLoadBalancer
         Port: 8222
         Protocol: TCP
   ##This is the IAM role that is used for the ECS elements
@@ -632,7 +632,7 @@ Resources:
     ECSServiceNATS:
       Type: AWS::ECS::Service
       DependsOn:
-        - PrivateLoadBalancer
+        - PublicLoadBalancer
         - ECSCluster
       Properties:
         ServiceName: nats
