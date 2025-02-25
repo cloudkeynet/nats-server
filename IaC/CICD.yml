@@ -31,6 +31,9 @@ Resources:
                           - echo "Creating imagedefinitions.json for ECS deployment"
                           - printf '[{"name":"dev-nats","imageUri":"%s:%s"}]' ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/dev-nats latest > imagedefinitions.json
                           - echo "Starting deployment using CodeDeploy"
+                    artifacts:
+                      files:
+                        - imagedefinitions.json
                 InsecureSsl: false
                 Type: "CODEPIPELINE"
             Artifacts: 
