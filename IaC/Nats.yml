@@ -199,15 +199,15 @@ Resources:
             - IpProtocol: tcp
               FromPort: 8222
               ToPort: 8222
-              CidrIp: 10.0.0.0/8  # Allowing HTTP traffic from SourceCIDR
+              CidrIp: 0.0.0.0/0  # Allowing HTTP traffic from SourceCIDR
             - IpProtocol: tcp
               FromPort: 4222
               ToPort: 4222
-              CidrIp: 10.0.0.0/8 # Allowing HTTPS traffic from SourceCIDR
+              CidrIp: 0.0.0.0/0 # Allowing HTTPS traffic from SourceCIDR
             - IpProtocol: tcp
               FromPort: 6222
               ToPort: 6222
-              CidrIp: 10.0.0.0/8 # Allowing HTTPS traffic from SourceCIDR
+              CidrIp: 0.0.0.0/0 # Allowing HTTPS traffic from SourceCIDR
           SecurityGroupEgress:
             - IpProtocol: -1  # Allow all outbound traffic (can be restricted further if needed)
               FromPort: -1
