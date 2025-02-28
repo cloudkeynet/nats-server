@@ -53,9 +53,12 @@ Parameters:
      Default: dev
      Description: Name of environment.
      AllowedValues: [ dev, demo, qa, sdlc, prod, preprod ]
+    SubnetsForLoadBalancer:
+     Type: List<AWS::EC2::Subnet::Id>
+     Description: "The subnets in which the ALB will be deployed (must be in multiple Availability Zones for high availability) Public" 
     Subnets:
      Type: List<AWS::EC2::Subnet::Id>
-     Description: "The subnets in which the ALB will be deployed (must be in multiple Availability Zones for high availability)"
+     Description: "The subnets in which the Ec2 will be deployed (must be in multiple Availability Zones for high availability) Private"
 
 Resources:
     MySnsTopic:
@@ -102,7 +105,7 @@ Resources:
         Name: !Sub ${EnvironmentName}-LoadBalancer-nats-Public
         Scheme: internet-facing
         Type: network
-        Subnets: !Ref Subnets
+        Subnets: !Ref SubnetsForLoadBalancer
         SecurityGroups: [!Ref 'PublicLoadBalancerSG']
         Tags:
           - Key: Owner
