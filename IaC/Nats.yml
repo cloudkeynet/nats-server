@@ -309,7 +309,7 @@ Resources:
           Essential: true
           PortMappings:
           - ContainerPort: 4222
-            HostPort: 0
+            HostPort: 4222
           - ContainerPort: 8222
             HostPort: 0
           - ContainerPort: 6222
