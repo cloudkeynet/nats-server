@@ -57,7 +57,13 @@ Resources:
             ServiceRole: !GetAtt IAMRole2.Arn
             TimeoutInMinutes: 60
             QueuedTimeoutInMinutes: 480
-            VpcConfig: {}
+            VpcConfig:
+              VpcId: !ImportValue VPCId
+              Subnets:
+                - !ImportValue PublicSubnet1Id
+                - !ImportValue PublicSubnet2Id
+              SecurityGroupIds:
+                - !ImportValue SecurityGroupId
             BadgeEnabled: false
             LogsConfig: 
                 CloudWatchLogs: 

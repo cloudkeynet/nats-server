@@ -157,19 +157,57 @@ Resources:
       SubnetId: !Ref PublicSubnet2
       RouteTableId: !Ref PublicSubnetRouteTable
 
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Grupo de seguridad para instancias en la VPC"
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 4222
+          ToPort: 4222
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8222
+          ToPort: 8222
+          CidrIp: 0.0.0.0/0 
+        - IpProtocol: tcp
+          FromPort: 6222
+          ToPort: 6222
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: "Name"
+          Value: "MiGrupoDeSeguridad"
+
+
 Outputs:
   VPCId:
     Description: VPC ID
     Value: !Ref VPC
+    Export:
+      Name: "VPCId"
   PublicSubnet1Id:
     Description: Public Subnet 1 ID
     Value: !Ref PublicSubnet1
+    Export:
+      Name: "PublicSubnet1Id"
   PublicSubnet2Id:
     Description: Public Subnet 2 ID
     Value: !Ref PublicSubnet2
+    Export:
+      Name: "PublicSubnet2Id"
   PrivateSubnet1Id:
     Description: Private Subnet 1 ID
     Value: !Ref PrivateSubnet1
+    Export:
+      Name: "PrivateSubnet1Id"
   PrivateSubnet2Id:
     Description: Private Subnet 2 ID
     Value: !Ref PrivateSubnet2
+    Export:
+      Name: "PrivateSubnet2Id"
+  SecurityGroupId:
+    Description: "ID del grupo de seguridad"
+    Value: !Ref SecurityGroup
+    Export:
+      Name: "SecurityGroupId"
