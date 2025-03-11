@@ -480,7 +480,7 @@ Resources:
         Tags:
           - Key: Owner
             Value: !Ref EnvironmentName
-  ##This
+  ##This is the autoscalingGroup
     ECSAutoScalingGroup:
       Type: AWS::AutoScaling::AutoScalingGroup
       Properties:
