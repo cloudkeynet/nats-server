@@ -86,4 +86,9 @@ Resources:
               - "arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess"
               - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 
-
+Outputs:
+  IAMRole2Arn:
+    Description: "ARN del rol IAM para CodeBuild"
+    Value: !GetAtt IAMRole2.Arn
+    Export:
+      Name: IAMRole2Arn

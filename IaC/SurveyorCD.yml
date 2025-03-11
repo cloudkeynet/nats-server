@@ -1,39 +1,15 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "CloudFormation template to build and push Docker image to ECR using CodeBuild"
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: "Nombre del entorno (dev, staging, prod)"
 
 Resources:
-  #Repository of ECR
-  ECRRepository:
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: "nats-surveyor"
-
-  #IAM role for the codebuild
-  IAMRoleCodeBuild:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: "codebuild-nats-service-role"
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: 
-                - "codebuild.amazonaws.com"
-            Action: 
-              - "sts:AssumeRole"
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess"
-        - "arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess"
-        - "arn:aws:iam::aws:policy/CloudWatchFullAccess"
-        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
-
-  #Codebuild project
   CodeBuildProject:
     Type: "AWS::CodeBuild::Project"
     Properties:
       Name: "SURVEYOR"
-      ServiceRole: !GetAtt IAMRoleCodeBuild.Arn
+      ServiceRole: !GetAtt IAMRole2.Arn
       Source:
         Type: "CODEPIPELINE"
         BuildSpec: !Sub |
@@ -42,7 +18,7 @@ Resources:
             install:
               commands:
                 - echo "Logging in to Amazon ECR..."
-                - aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
+                - aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor
             pre_build:
               commands:
                 - echo "Building the Docker image..."
