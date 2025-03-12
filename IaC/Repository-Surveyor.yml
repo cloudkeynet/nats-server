@@ -1,11 +1,13 @@
 AWSTemplateFormatVersion: "2010-09-09"
+
+##Parameters of the enviroment name
+Parameters:
+  EnvironmentName:
+    Type: String
+    Description: "Nombre del entorno (dev, staging, prod)"
+
 Resources:
-  ## 🔹 Parámetro para el Nombre del Entorno
-  Parameters:
-    EnvironmentName:
-      Type: String
-      Description: "Nombre del entorno (dev, staging, prod)"
-  ##ECR rol
+  ##ECR role
   ECRRole:
     Type: AWS::IAM::Role
     Properties:
@@ -41,11 +43,11 @@ Resources:
         - Key: Name
           Value: !Sub "ECRRole-${EnvironmentName}"
 
-  ##Repository ECR
+  ##ECR repository
   ECRRepository:
     Type: "AWS::ECR::Repository"
     Properties:
-      RepositoryName: "nats-surveyor"
+      RepositoryName: !Sub "nats-surveyor-${EnvironmentName}"
       ImageScanningConfiguration:
         ScanOnPush: true
       ImageTagMutability: MUTABLE
