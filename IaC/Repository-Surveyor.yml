@@ -1,94 +1,78 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "CloudFormation template to build and push Docker image to ECR using CodeBuild"
-
 Resources:
-  #Repository of ECR
-  ECRRepository:
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: "nats-surveyor"
-
-  #IAM role for the codebuild
-  IAMRoleCodeBuild:
+  ##ECR rol
+  ECRRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: "codebuild-nats-service-role"
+      RoleName: !Sub "ECRRepositoryRole-${EnvironmentName}"
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
-              Service: 
-                - "codebuild.amazonaws.com"
-            Action: 
+              Service:
+                - "ecr.amazonaws.com"
+            Action:
               - "sts:AssumeRole"
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryFullAccess"
-        - "arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess"
-        - "arn:aws:iam::aws:policy/CloudWatchFullAccess"
-        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+      Policies:
+        - PolicyName: "ECRFullAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ecr:CreateRepository"
+                  - "ecr:DeleteRepository"
+                  - "ecr:DescribeRepositories"
+                  - "ecr:BatchGetImage"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:PutImage"
+                  - "ecr:InitiateLayerUpload"
+                  - "ecr:UploadLayerPart"
+                  - "ecr:CompleteLayerUpload"
+                  - "ecr:SetRepositoryPolicy"
+                Resource: "*"
+      Tags:
+        - Key: Name
+          Value: !Sub "ECRRole-${EnvironmentName}"
 
-  #Codebuild project
-  CodeBuildProject:
-    Type: "AWS::CodeBuild::Project"
+  ##Repository ECR
+  ECRRepository:
+    Type: "AWS::ECR::Repository"
     Properties:
-      Name: "SURVEYOR"
-      ServiceRole: !GetAtt IAMRoleCodeBuild.Arn
-      Source:
-        Type: "CODEPIPELINE"
-        BuildSpec: !Sub |
-          version: 0.2
-          phases:
-            install:
-              commands:
-                - echo "Logging in to Amazon ECR..."
-                - aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
-            pre_build:
-              commands:
-                - echo "Building the Docker image..."
-                - docker build --no-cache -t nats-surveyor .
-            build:
-              commands:
-                - echo "Tagging the Docker image..."
-                - docker tag nats-surveyor:latest ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor:latest
-            post_build:
-              commands:
-                - echo "Pushing the Docker image to ECR..."
-                - docker push ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor:latest
-                - echo "Build completed on `date`"
-                - echo "Creating imagedefinitions.json for ECS deployment"
-                - printf '[{"name":"nats-surveyor","imageUri":"%s:%s"}]' ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor latest > imagedefinitions.json
-                - echo "Starting deployment using CodeDeploy"
-          artifacts:
-            files:
-              - imagedefinitions.json
-      Environment:
-        ComputeType: "BUILD_GENERAL1_SMALL"
-        Image: "aws/codebuild/standard:7.0"
-        ImagePullCredentialsType: "CODEBUILD"
-        PrivilegedMode: true
-        Type: "LINUX_CONTAINER"
-        EnvironmentVariables:
-          - Name: "CommitId"
-            Type: "PLAINTEXT"
-            Value: "latest"
-      Artifacts:
-        Type: "CODEPIPELINE"
-      Cache:
-        Type: "NO_CACHE"
-      TimeoutInMinutes: 60
-      LogsConfig:
-        CloudWatchLogs:
-          Status: "ENABLED"
-      VpcConfig:
-        VpcId: !ImportValue VPCId
-        Subnets:
-          - !ImportValue PublicSubnet1Id
-          - !ImportValue PublicSubnet2Id
-        SecurityGroupIds:
-          - !ImportValue SecurityGroupId
-
-Outputs:
-  ECRRepositoryUri:
-    Description: "ECR Repository URI"
-    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor"
+      RepositoryName: "nats-surveyor"
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      ImageTagMutability: MUTABLE
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Eliminar imágenes sin etiqueta después de 30 días",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 30
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !GetAtt ECRRole.Arn
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:PutImage"
+              - "ecr:InitiateLayerUpload"
+              - "ecr:UploadLayerPart"
+              - "ecr:CompleteLayerUpload"
