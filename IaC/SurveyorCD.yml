@@ -9,7 +9,7 @@ Resources:
     Type: "AWS::CodeBuild::Project"
     Properties:
       Name: "SURVEYOR"
-      ServiceRole: !GetAtt IAMRole2.Arn
+      ServiceRole: !ImportValue IAMRole2Arn
       Source:
         Type: "CODEPIPELINE"
         BuildSpec: !Sub |
