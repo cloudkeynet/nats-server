@@ -1,5 +1,10 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Resources:
+  ## 🔹 Parámetro para el Nombre del Entorno
+  Parameters:
+    EnvironmentName:
+      Type: String
+      Description: "Nombre del entorno (dev, staging, prod)"
   ##ECR rol
   ECRRole:
     Type: AWS::IAM::Role
