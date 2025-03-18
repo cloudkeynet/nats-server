@@ -59,8 +59,8 @@ Resources:
       VpcConfig:
         VpcId: !ImportValue VPCId
         Subnets:
-          - !ImportValue PublicSubnet1Id
-          - !ImportValue PublicSubnet2Id
+          - !ImportValue PrivateSubnet1Id
+          - !ImportValue PrivateSubnet2Id
         SecurityGroupIds:
           - !ImportValue SecurityGroupId
 
