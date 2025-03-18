@@ -46,10 +46,12 @@ Resources:
             Environment: 
                 ComputeType: "BUILD_GENERAL1_SMALL"
                 EnvironmentVariables: 
-                  - 
-                    Name: "CommitId"
+                  - Name: "CommitId"
                     Type: "PLAINTEXT"
-                    Value: "lastest"
+                    Value: "latest"
+                  - Name: "LOG_LEVEL"
+                    Type: "PLAINTEXT"
+                    Value: "DEBUG"
                 Image: "aws/codebuild/standard:7.0"
                 ImagePullCredentialsType: "CODEBUILD"
                 PrivilegedMode: true
@@ -85,6 +87,32 @@ Resources:
               - "arn:aws:iam::aws:policy/CloudWatchFullAccess"
               - "arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess"
               - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+            Policies:
+              - PolicyName: "AdditionalPermissions"
+                PolicyDocument:
+                  Version: "2012-10-17"
+                  Statement:
+                    - Effect: Allow
+                      Action:
+                        - "ec2:DescribeNetworkInterfaces"
+                        - "ec2:DeleteNetworkInterface"
+                        - "ec2:CreateNetworkInterface"
+                        - "ec2:AttachNetworkInterface"
+                        - "ec2:DetachNetworkInterface"
+                        - "ec2:DescribeSubnets"
+                        - "ec2:DescribeSecurityGroups"
+                        - "ec2:DescribeVpcs"
+                        - "ec2:DescribeDhcpOptions"
+                        - "ec2:CreateTags"
+                        - "ec2:DeleteTags"
+                        - "ec2:DescribeRouteTables"
+                        - "ec2:DescribeInternetGateways"
+                        - "ec2:DescribeNatGateways"
+                        - "ec2:DescribeVpcEndpoints"
+                        - "ec2:DescribeVpcPeeringConnections"
+                        - "ec2:DescribeVpcClassicLink"
+                        - "ec2:DescribeVpcAttribute"
+                      Resource: "*"
 
 Outputs:
   IAMRole2Arn:

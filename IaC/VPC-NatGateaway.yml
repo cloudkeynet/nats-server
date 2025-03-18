@@ -179,7 +179,6 @@ Resources:
         - Key: "Name"
           Value: "MiGrupoDeSeguridad"
 
-
 Outputs:
   VPCId:
     Description: VPC ID
