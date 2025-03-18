@@ -2,6 +2,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
   EnvironmentName:
     Type: String
+    Default: dev
     Description: "Nombre del entorno (dev, staging, prod)"
 
 Resources:

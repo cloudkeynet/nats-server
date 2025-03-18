@@ -98,8 +98,6 @@ Resources:
       ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
       TaskRoleArn: !GetAtt ECSTaskExecutionRole.Arn
       NetworkMode: "awsvpc"
-      RequiresCompatibilities:
-        - "FARGATE"
       Cpu: "256"
       Memory: "512"
       ContainerDefinitions:
@@ -118,16 +116,14 @@ Resources:
       Cluster: !Ref ECSCluster
       ServiceName: !Sub "nats-surveyor-service-${EnvironmentName}"
       TaskDefinition: !Ref TaskDefinition
-      LaunchType: "FARGATE"
       DesiredCount: 0
       NetworkConfiguration:
         AwsvpcConfiguration:
           Subnets:
-            - !ImportValue PublicSubnet1Id
-            - !ImportValue PublicSubnet2Id
+            - !ImportValue PrivateSubnet1Id
+            - !ImportValue PrivateSubnet2Id
           SecurityGroups:
             - !ImportValue SecurityGroupId
-          AssignPublicIp: "ENABLED"
   ##ECR repository
   ECRRepository:
     Type: "AWS::ECR::Repository"
