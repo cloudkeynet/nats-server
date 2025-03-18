@@ -18,22 +18,22 @@ Resources:
             install:
               commands:
                 - echo "Logging in to Amazon ECR..."
-                - aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor
+                - aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor-${EnvironmentName}
             pre_build:
               commands:
                 - echo "Building the Docker image..."
-                - docker build --no-cache -t nats-surveyor .
+                - docker build --no-cache -t nats-surveyor:latest .
             build:
               commands:
                 - echo "Tagging the Docker image..."
-                - docker tag nats-surveyor:latest ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor:latest
+                - docker tag nats-surveyor:latest ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor-${EnvironmentName}:latest
             post_build:
               commands:
                 - echo "Pushing the Docker image to ECR..."
-                - docker push ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor:latest
+                - docker push ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor-${EnvironmentName}:latest
                 - echo "Build completed on `date`"
                 - echo "Creating imagedefinitions.json for ECS deployment"
-                - printf '[{"name":"nats-surveyor","imageUri":"%s:%s"}]' ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor latest > imagedefinitions.json
+                - printf '[{"name":"nats-surveyor","imageUri":"%s:%s"}]' ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor-${EnvironmentName} latest > imagedefinitions.json
                 - echo "Starting deployment using CodeDeploy"
           artifacts:
             files:
@@ -67,4 +67,4 @@ Resources:
 Outputs:
   ECRRepositoryUri:
     Description: "ECR Repository URI"
-    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor"
+    Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/nats-surveyor-${EnvironmentName}"
