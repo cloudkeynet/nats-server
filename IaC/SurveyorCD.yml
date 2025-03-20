@@ -6,6 +6,41 @@ Parameters:
     Description: "Nombre del entorno (dev, staging, prod)"
 
 Resources:
+  ##ECR Role
+  ECRRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "ECRRepositoryRole-${EnvironmentName}"
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - "ecr.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "ECRFullAccessPolicy"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ecr:CreateRepository"
+                  - "ecr:DeleteRepository"
+                  - "ecr:DescribeRepositories"
+                  - "ecr:BatchGetImage"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:PutImage"
+                  - "ecr:InitiateLayerUpload"
+                  - "ecr:UploadLayerPart"
+                  - "ecr:CompleteLayerUpload"
+                  - "ecr:SetRepositoryPolicy"
+                Resource: "*"
+      Tags:
+        - Key: Name
+          Value: !Sub "ECRRole-${EnvironmentName}"
   CodeBuildProject:
     Type: "AWS::CodeBuild::Project"
     Properties:
@@ -64,7 +99,45 @@ Resources:
           - !ImportValue PrivateSubnet2Id
         SecurityGroupIds:
           - !ImportValue SecurityGroupId
-
+  ECRRepository:
+    Type: "AWS::ECR::Repository"
+    Properties:
+      RepositoryName: !Sub "nats-surveyor-${EnvironmentName}"
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      ImageTagMutability: MUTABLE
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Eliminar imágenes sin etiqueta después de 30 días",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 30
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      RepositoryPolicyText:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !GetAtt ECRRole.Arn
+            Action:
+              - "ecr:BatchGetImage"
+              - "ecr:GetDownloadUrlForLayer"
+              - "ecr:PutImage"
+              - "ecr:InitiateLayerUpload"
+              - "ecr:UploadLayerPart"
+              - "ecr:CompleteLayerUpload"
 Outputs:
   ECRRepositoryUri:
     Description: "ECR Repository URI"
