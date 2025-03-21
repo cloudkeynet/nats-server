@@ -6,6 +6,25 @@ Parameters:
     Description: "Nombre del entorno (dev, staging, prod)"
 
 Resources:
+  ##Security group
+  SecurityGroup:
+      Type: AWS::EC2::SecurityGroup
+      Properties:
+        GroupDescription: Access to the ECS hosts that run containers
+        SecurityGroupIngress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+        SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp:  0.0.0.0/0
+        VpcId: !ImportValue VPCId
+        Tags:
+        - Key: Name
+          Value: !Sub LINC-${EnvironmentName}
   ##ECR Role
   ECRRole:
     Type: AWS::IAM::Role
@@ -37,6 +56,12 @@ Resources:
                   - "ecr:UploadLayerPart"
                   - "ecr:CompleteLayerUpload"
                   - "ecr:SetRepositoryPolicy"
+                  - "ec2:DescribeSecurityGroups"
+                  - "ec2:DescribeSubnets"
+                  - "ec2:DescribeVpcs"
+                  - "ec2:CreateNetworkInterface"
+                  - "ec2:DeleteNetworkInterface"
+                  - "ec2:DescribeNetworkInterfaces"
                 Resource: "*"
       Tags:
         - Key: Name
@@ -98,7 +123,7 @@ Resources:
           - !ImportValue PrivateSubnet1Id
           - !ImportValue PrivateSubnet2Id
         SecurityGroupIds:
-          - !ImportValue SecurityGroupId
+          - !Ref SecurityGroup
   ECRRepository:
     Type: "AWS::ECR::Repository"
     Properties:
