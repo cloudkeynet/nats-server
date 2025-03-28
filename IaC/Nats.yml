@@ -610,6 +610,12 @@ Resources:
               Statement:
               - Effect: Allow
                 Action:
+                  - "ecs:DescribeServices"
+                  - "ecs:UpdateService"
+                  - "ecs:DescribeTaskDefinition"
+                  - "ecs:RegisterTaskDefinition"
+                  - "ecs:DescribeClusters"
+                  - "ecs:RunTask"
                   # Rules which allow ECS to attach network interfaces to instances
                   # on your behalf in order for awsvpc networking mode to work right
                   - 'ec2:AttachNetworkInterface'
